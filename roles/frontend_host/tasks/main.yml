@@ -1,0 +1,52 @@
+---
+- name: Install required packages
+  ansible.builtin.package:
+    name: caddy
+    state: present
+
+- name: Create /var/www/html directory
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    owner: caddyz
+    group: caddy
+    mode: '0755'
+
+- name: Copy index.html to web root
+  ansible.builtin.copy:
+    src: files/index.html
+    dest: /var/www/html/index.html
+    owner: caddy
+    group: caddy
+    mode: '0644'
+
+- name: Copy client.js to web root
+  ansible.builtin.copy:
+    src: files/client.js
+    dest: /var/www/html/client.js
+    owner: caddy
+    group: caddy
+    mode: '0644'
+
+- name: Generate Caddyfile
+  ansible.builtin.template:
+    src: templates/Caddyfile.j2
+    dest: /etc/caddy/Caddyfile
+    owner: root
+    group: caddy
+    mode: '0644'
+  vars:
+    backend_url: b01.lab13.internal
+  notify:
+    - Restart caddy
+
+- name: Generate config.js
+  ansible.builtin.template:
+    src: templates/config.js.j2
+    dest: /var/www/html/config.js
+    owner: caddy
+    group: caddy
+    mode: '0644'
+  vars:
+    public_dns_name: "{{ ansible_host }}"
+
